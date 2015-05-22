@@ -1,2 +1,6 @@
 # PML_CourseProject
-Files from the Practical Machine Learning Peer Assesment
+Repository for the Practical Machine Learning Peer Assesment rmd file.
+
+You can see the online version at this link:
+
+http://rpubs.com/SilvanoS/Fitness_Prediction_Model
