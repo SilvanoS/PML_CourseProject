@@ -1,0 +1,95 @@
+---
+title: "PML Assessment: Fitness Prediction Model"
+author: "SilvanoS (*many thanks to Olivia Zaho and Marcelo Gomes Marques*)"
+date: "Thursday, May 21, 2015"
+output: html_document
+---
+
+#Synopsis
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants and predict the manner in which they did the exercise. We can do it analizing the "classe" variable in the training set.
+
+#Data Preprocessing
+
+The training data for this project are available here: 
+
+[traing set](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+
+The test data are available here: 
+
+[test set](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+
+We use R Language to process the data. Remember to put the R script and the databases in your working directory.
+We load the necessary libraries:
+```{r}
+library(caret)
+library(randomForest)
+```
+
+
+And read the data from the raw csv file.
+
+```{r}
+training_set <- read.csv("pml-training.csv",na.strings=c("", "NA", "NULL"))
+testing_set <- read.csv("pml-testing.csv",na.strings = "NA")
+```
+We can see the dimension of the dataset:
+```{r}
+dim(training_set)
+dim(testing_set)
+```
+
+Both datasets contain a large number of missing values. We clean the datasets removing NAs values.
+
+```{r}
+training_na <- training_set[, colSums(is.na(training_set)) == 0]
+testing_na <- testing_set[, colSums(is.na(testing_set)) == 0]
+```
+Furthermore, the first six columns contain useless informations for our predictive calculation.We can remove them.
+
+```{r}
+training_final <- training_na[, -c(1:6)]
+testing_final <- testing_na[, -c(1:6)]
+```
+
+Since the final traing set is too large for the processing capability of
+my computer, I decided to use only a quarter of the available data:
+
+```{r}
+inTraining_portion<-createDataPartition(y=training_final$classe,p=0.25, list=FALSE)
+training_portion<-training_final[inTraining_portion,]
+```
+
+Now we split the training set in training and validation set. Separating data into training and testing(validation) sets is an important part of evaluating machine learning models.After a model has been processed by using the training set, you test the model by making predictions against the test(validation) set.
+
+```{r}
+inTrain <- createDataPartition(y=training_portion$classe,p=0.7, list=FALSE)
+training <- training_portion[inTrain,]
+validation <- training_portion[-inTrain,]
+```
+
+#Predictive Model: Random Forest
+We decided to apply the Random Forest as a predictive algorithm.
+
+```{r}
+modFit <- train(classe~ .,data=training,method="rf",prox=TRUE)
+modFit
+```
+
+Now we verify the accuracy of the model using the validation set.
+
+```{r}
+prediction <- predict(modFit,validation)
+confusionMatrix(prediction,validation$classe)
+```
+
+The high Values of Accuracy, Sensibility and Sensitivity obtained, confirm the good performance of the predictive algorithm.
+We can finally apply our model to the testing set and see the results.
+
+```{r}
+pred_testing <- predict(modFit, testing_set)
+pred_testing <- as.character(pred_testing)
+pred_testing
+
+```
+
